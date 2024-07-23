@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-23 21:45:10
+ * @FilePath: /miniob/src/observer/sql/operator/physical_operator.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -37,24 +44,25 @@ class Trx;
  */
 enum class PhysicalOperatorType
 {
-  TABLE_SCAN,
-  TABLE_SCAN_VEC,
-  INDEX_SCAN,
-  NESTED_LOOP_JOIN,
-  EXPLAIN,
-  PREDICATE,
-  PREDICATE_VEC,
-  PROJECT,
-  PROJECT_VEC,
-  CALC,
-  STRING_LIST,
-  DELETE,
-  INSERT,
-  SCALAR_GROUP_BY,
-  HASH_GROUP_BY,
-  GROUP_BY_VEC,
-  AGGREGATE_VEC,
-  EXPR_VEC,
+  TABLE_SCAN,       // 表扫描: 逐行读取整个表。
+  INDEX_SCAN,       // 索引扫描
+  NESTED_LOOP_JOIN, // 嵌套循环连接
+  EXPLAIN,          // 描述执行计划
+  PREDICATE,        // 过滤: 应用过滤条件 (如 WHERE 子句)
+  PROJECT,          // 投影: 选择特定的列（如 SELECT 子句）
+  CALC,             // 计算: 执行计算或表达式求值
+  STRING_LIST,      // 字符串列表: 处理字符串列表操作
+  DELETE,           // 删除: 删除表中的记录
+  INSERT,           // 插入: 插入元组
+  SCALAR_GROUP_BY,  // 标量分组
+  HASH_GROUP_BY,    // 哈希分组
+  AGGREGATE,        // 聚合: 对数据进行聚合操作
+  TABLE_SCAN_VEC,   // 表扫描(向量化)
+  PREDICATE_VEC,    // 过滤(向量化)
+  PROJECT_VEC,      // 投影(向量化)
+  GROUP_BY_VEC,     // 分组(向量化)
+  AGGREGATE_VEC,    // 聚合(向量化)
+  EXPR_VEC,         // 表达式(向量化)
 };
 
 /**

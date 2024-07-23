@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-23 21:28:10
+ * @FilePath: /miniob/src/observer/sql/operator/logical_operator.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -34,11 +41,13 @@ enum class LogicalOperatorType
 {
   CALC,
   TABLE_GET,   ///< 从表中获取数据
+  VIEW_GET,    ///< 从视图中获取数据
   PREDICATE,   ///< 过滤，就是谓词
   PROJECTION,  ///< 投影，就是select
   JOIN,        ///< 连接
   INSERT,      ///< 插入
   DELETE,      ///< 删除，删除可能会有子查询
+  UPDATE,      ///< 更新
   EXPLAIN,     ///< 查看执行计划
   GROUP_BY,    ///< 分组
 };
