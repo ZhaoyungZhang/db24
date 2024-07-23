@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-23 16:47:53
+ * @FilePath: /miniob/src/observer/sql/stmt/create_table_stmt.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -47,5 +54,6 @@ public:
 private:
   std::string                  table_name_;
   std::vector<AttrInfoSqlNode> attr_infos_;
+  // 只有创建表的时候需要指定
   StorageFormat                storage_format_;
 };

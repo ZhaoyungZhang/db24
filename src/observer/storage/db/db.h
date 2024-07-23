@@ -67,6 +67,15 @@ public:
       const StorageFormat storage_format = StorageFormat::ROW_FORMAT);
 
   /**
+   * @brief 删除一个表 
+   * @param table_name 表名
+   * NOTE: 假设drop table 和 访问表不会并发
+   */
+  RC drop_table(const char *table_name);
+
+  
+
+  /**
    * @brief 根据表名查找表
    */
   Table *find_table(const char *table_name) const;
@@ -109,6 +118,9 @@ private:
 
   /// @brief 初始化数据库的double buffer pool
   RC init_dblwr_buffer();
+
+  /// @brief 删除表的所有相关字段
+  RC remove_table_fileds(const char *table_name);
 
 private:
   string                         name_;                 ///< 数据库名称

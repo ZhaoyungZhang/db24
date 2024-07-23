@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-23 16:16:30
+ * @FilePath: /miniob/src/observer/common/rc.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -59,6 +66,7 @@ See the Mulan PSL v2 for more details. */
   DEFINE_RC(IOERR_SEEK)                  \
   DEFINE_RC(IOERR_TOO_LONG)              \
   DEFINE_RC(IOERR_SYNC)                  \
+  DEFINE_RC(IOERR_UNLINK)                 \
   DEFINE_RC(LOCKED_UNLOCK)               \
   DEFINE_RC(LOCKED_NEED_WAIT)            \
   DEFINE_RC(LOCKED_CONCURRENCY_CONFLICT) \

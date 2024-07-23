@@ -55,11 +55,12 @@ Table::~Table()
 RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, const char *base_dir,
     span<const AttrInfoSqlNode> attributes, StorageFormat storage_format)
 {
+  // 创建表
   if (table_id < 0) {
     LOG_WARN("invalid table id. table_id=%d, table_name=%s", table_id, name);
     return RC::INVALID_ARGUMENT;
   }
-
+  // 如果name空
   if (common::is_blank(name)) {
     LOG_WARN("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
@@ -126,6 +127,36 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
+
+RC Table::destory(const char *table_name, const string db_path){
+  // Note: 索引的删除已经在Db::drop_table调用drop_indexes
+
+  RC rc = RC::SUCCESS;
+  // 1. 刷脏页
+  if ( (rc = sync()) != RC::SUCCESS){
+    LOG_ERROR("Failed to destory table %s due to sync failed.", table_name);
+    return rc;
+  }
+  // 包括.table .data .index(在drop index里面删除) 
+  // .table
+  auto table_meta_name = table_meta_file(db_path.c_str(), table_name);
+  if (unlink(table_meta_name.c_str()) == -1) {
+    LOG_ERROR("Remove table (%s) data meta file %s failed.", table_name, table_meta_name.c_str());
+    return RC::IOERR_UNLINK;
+  }
+  // .data
+  auto table_file_name = table_data_file(db_path.c_str(), table_name);
+  if (unlink(table_file_name.c_str()) == -1) {
+    LOG_ERROR("Remove table (%s) data file %s failed.", table_name, table_file_name.c_str());
+    return RC::IOERR_UNLINK;
+  }
+
+  // TODO: text case
+
+  return rc;
+  
+}
+
 
 RC Table::open(Db *db, const char *meta_file, const char *base_dir)
 {

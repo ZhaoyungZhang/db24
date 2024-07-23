@@ -85,6 +85,12 @@ public:
   // TODO refactor
   RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name);
 
+  RC drop_index(Trx *trx, const char *index_name);
+
+  RC drop_indexes(){ return RC::SUCCESS; }
+
+  RC destory(const char* table_name, const string db_path);
+
   RC get_record_scanner(RecordFileScanner &scanner, Trx *trx, ReadWriteMode mode);
 
   RC get_chunk_scanner(ChunkFileScanner &scanner, Trx *trx, ReadWriteMode mode);
@@ -108,6 +114,7 @@ public:
 
   const TableMeta &table_meta() const;
 
+  // 
   RC sync();
 
 private:

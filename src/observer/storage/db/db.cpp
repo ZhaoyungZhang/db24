@@ -29,6 +29,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 #include "storage/clog/disk_log_handler.h"
 #include "storage/clog/integrated_log_replayer.h"
+#include "db.h"
 
 using namespace common;
 
@@ -159,6 +160,57 @@ RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attribut
   opened_tables_[table_name] = table;
   LOG_INFO("Create table success. table name=%s, table_id:%d", table_name, table_id);
   return RC::SUCCESS;
+}
+
+RC Db::remove_table_fileds(const char *table_name) {
+  // 包括.table .data .index(在drop index里面删除) 
+  // .table
+  auto table_meta_name = table_meta_file(path_.c_str(), table_name);
+  if (unlink(table_meta_name.c_str()) == -1) {
+    LOG_ERROR("Remove table (%s) data meta file %s failed.", table_name, table_meta_name.c_str());
+    return RC::IOERR_UNLINK;
+  }
+  // .data
+  auto table_file_name = table_data_file(path_.c_str(), table_name);
+  if (unlink(table_file_name.c_str()) == -1) {
+    LOG_ERROR("Remove table (%s) data file %s failed.", table_name, table_file_name.c_str());
+    return RC::IOERR_UNLINK;
+  }
+  return RC::SUCCESS;
+}
+
+RC Db::drop_table(const char *table_name) {
+  // TODO:同时由于buffer pool的存在，在新建表和插入数据的时候，
+  // 会写入buffer pool缓存。所以drop table，不仅需要删除文件，
+  // 也需要清空buffer pool ，防止在数据没落盘的时候，再建立同名表，
+  // 仍然可以查询到数据
+
+  // 1. 查找表
+  RC rc = RC::SUCCESS;
+  auto it = opened_tables_.find(table_name);
+  if(it == opened_tables_.end()){
+    LOG_WARN("Table %s has not been opened before.", table_name);
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+
+  auto table = it->second;
+  // 2. 如果有 view 则不能drop (23年赛题)
+  // if(it->second-)
+
+  // 3. 删除所有索引 (TODO DROP INDEX)
+  if( (rc = table->drop_indexes()) != RC::SUCCESS){
+    LOG_WARN("Table %s index drop error.", table_name);
+    return rc;
+  }
+
+  // 4. 删除表的其他字段 & 清空buffer pool
+  table->destory(table_name,path_);
+
+  // 5. 打开表中删除表 并且 析构
+  opened_tables_.erase(it);
+  delete table;
+
+  return rc;
 }
 
 Table *Db::find_table(const char *table_name) const

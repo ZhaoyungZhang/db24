@@ -81,7 +81,7 @@ function do_init
     mkdir -p build && \
     cd build && \
     ${CMAKE_COMMAND} .. -DEVENT__DISABLE_OPENSSL=ON -DEVENT__LIBRARY_TYPE=BOTH && \
-    ${MAKE_COMMAND} -j4 && \
+    ${MAKE_COMMAND} -j16 && \
     make install
 
   # build googletest
