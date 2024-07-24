@@ -14,9 +14,11 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include <string>
-#include <vector>
 #include <memory>
+#include <stddef.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "sql/parser/value.h"
 

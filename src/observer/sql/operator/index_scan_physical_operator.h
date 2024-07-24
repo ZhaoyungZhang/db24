@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-24 17:01:27
+ * @FilePath: /miniob/src/observer/sql/operator/index_scan_physical_operator.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -61,6 +68,8 @@ private:
   Value right_value_;
   bool  left_inclusive_  = false;
   bool  right_inclusive_ = false;
+
+  AttrType index_field_type_;
 
   std::vector<std::unique_ptr<Expression>> predicates_;
 };

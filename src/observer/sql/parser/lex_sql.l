@@ -1,7 +1,7 @@
 %top{
 /*
 这里的代码会被复制到lex_sql.cpp的最开始位置
-定义yy_size_t的原因是因为flex生成的代码，会使用yy_size_t与其他类型的数字
+定义yy_size_t的原因是因为flex生成的代码, 会使用yy_size_t与其他类型的数字
 做比较，导致编译报警
 */
 #define YY_TYPEDEF_YY_SIZE_T
@@ -110,6 +110,7 @@ ROLLBACK                                RETURN_TOKEN(TRX_ROLLBACK);
 INT                                     RETURN_TOKEN(INT_T);
 CHAR                                    RETURN_TOKEN(STRING_T);
 FLOAT                                   RETURN_TOKEN(FLOAT_T);
+DATE                                    RETURN_TOKEN(DATE_T);
 LOAD                                    RETURN_TOKEN(LOAD);
 DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);

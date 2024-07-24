@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-24 18:39:35
+ * @FilePath: /miniob/src/observer/sql/parser/value.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -14,7 +21,15 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include "sql/parser/date.h"
+#include <compare>
+#include <limits>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
+#include <vector>
+
 
 /**
  * @brief 属性的类型
@@ -26,6 +41,7 @@ enum class AttrType
   CHARS,     ///< 字符串类型
   INTS,      ///< 整数类型(4字节)
   FLOATS,    ///< 浮点数类型(4字节)
+  DATES,     ///< 日期类型 字符串
   BOOLEANS,  ///< boolean类型，当前不是由parser解析出来的，是程序内部使用的
 };
 
@@ -46,6 +62,7 @@ public:
   explicit Value(int val);
   explicit Value(float val);
   explicit Value(bool val);
+  explicit Value(Date date);
   explicit Value(const char *s, int len = 0);
 
   Value(const Value &other)            = default;
@@ -57,12 +74,15 @@ public:
   void set_int(int val);
   void set_float(float val);
   void set_boolean(bool val);
+  void set_date(Date date);
   void set_string(const char *s, int len = 0);
   void set_value(const Value &value);
 
   std::string to_string() const;
 
   int compare(const Value &other) const;
+
+  static bool convert(AttrType new_type, Value &value); // convert Value type to new_type
 
   const char *data() const;
   int         length() const { return length_; }
@@ -77,7 +97,10 @@ public:
   int         get_int() const;
   float       get_float() const;
   std::string get_string() const;
+  Date        get_date() const;
   bool        get_boolean() const;
+  // bool        is_null() const; 
+  
 
 private:
   AttrType attr_type_ = AttrType::UNDEFINED;
@@ -87,6 +110,7 @@ private:
   {
     int   int_value_;
     float float_value_;
+    Date date_value_;
     bool  bool_value_;
   } num_value_;
   std::string str_value_;

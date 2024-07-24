@@ -91,6 +91,8 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
 
   filter_unit = new FilterUnit;
 
+  AttrType left_type;
+
   if (condition.left_is_attr) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
@@ -102,11 +104,15 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_left(filter_obj);
+    left_type = field->type();
   } else {
     FilterObj filter_obj;
     filter_obj.init_value(condition.left_value);
     filter_unit->set_left(filter_obj);
+    left_type = condition.left_value.attr_type();
   }
+
+  AttrType right_type;
 
   if (condition.right_is_attr) {
     Table           *table = nullptr;
@@ -119,14 +125,39 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_right(filter_obj);
+    right_type = field->type();
   } else {
     FilterObj filter_obj;
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
+    right_type = condition.right_value.attr_type();
   }
 
+  if (left_type != right_type) { // 需要进行转换
+    if (condition.left_is_attr && !condition.right_is_attr) {
+      // 右侧是值 左侧是属性 例如: select * from student where id = 1;
+      auto right_value = condition.right_value;
+      if (!Value::convert(left_type,right_value)){
+        LOG_TRACE("Convert failed, left type is %d, right value type is %d",left_type,right_value.attr_type());
+        return RC::SQL_SYNTAX;
+      }
+      FilterObj fobj;
+      fobj.init_value(right_value);
+      filter_unit->set_right(fobj);
+    } else if (!condition.left_is_attr && condition.right_is_attr) {
+      // 右侧是属性 左侧是值
+      auto left_value = condition.left_value;
+      if (!Value::convert(right_type,left_value)){
+        LOG_TRACE("Convert failed, right type is %d, left value type is %d",right_type,left_value.attr_type());
+        return RC::SQL_SYNTAX;
+      }
+      FilterObj fobj;
+      fobj.init_value(left_value);
+      filter_unit->set_left(fobj);
+    }
+  }
+  
   filter_unit->set_comp(comp);
-
   // 检查两个类型是否能够比较
   return rc;
 }

@@ -22,13 +22,23 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index,
       index_(index),
       mode_(mode),
       left_inclusive_(left_inclusive),
-      right_inclusive_(right_inclusive)
-{
+      right_inclusive_(right_inclusive) {
+  // const char* field
+  auto &table_meta = table_->table_meta();
+  auto *field_meta = table_meta.field(index_->index_meta().field());
+  index_field_type_ = field_meta->type();
+
   if (left_value) {
     left_value_ = *left_value;
+    if (!Value::convert(index_field_type_,left_value_)){
+      LOG_TRACE("failed to convert value to index field type");
+    }
   }
   if (right_value) {
     right_value_ = *right_value;
+    if (!Value::convert(index_field_type_,right_value_)){
+      LOG_TRACE("failed to convert value to index field type");
+    }
   }
 }
 

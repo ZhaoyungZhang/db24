@@ -34,8 +34,8 @@
 /* Undocumented macros, especially those whose name start with YY_,
    are private implementation details.  Do not rely on them.  */
 
-#ifndef YY_YY_YACC_SQL_HPP_INCLUDED
-# define YY_YY_YACC_SQL_HPP_INCLUDED
+#ifndef YY_YY_YACC_SQL_TAB_H_INCLUDED
+# define YY_YY_YACC_SQL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -128,7 +128,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 132 "yacc_sql.hpp"
+#line 132 "yacc_sql.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -154,4 +154,4 @@ struct YYLTYPE
 
 int yyparse (const char * sql_string, ParsedSqlResult * sql_result, void * scanner);
 
-#endif /* !YY_YY_YACC_SQL_HPP_INCLUDED  */
+#endif /* !YY_YY_YACC_SQL_TAB_H_INCLUDED  */
