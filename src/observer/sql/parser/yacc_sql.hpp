@@ -121,6 +121,7 @@ union YYSTYPE
   Expression *                               expression;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
+  std::vector<std::vector<Value>>          * record_list;
   std::vector<ConditionSqlNode> *            condition_list;
   std::vector<RelAttrSqlNode> *              rel_attr_list;
   std::vector<std::string> *                 relation_list;
@@ -128,7 +129,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 132 "yacc_sql.hpp"
+#line 133 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

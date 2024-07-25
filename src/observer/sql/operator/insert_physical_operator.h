@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-25 12:59:37
+ * @FilePath: /miniob/src/observer/sql/operator/insert_physical_operator.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -27,7 +34,7 @@ class InsertStmt;
 class InsertPhysicalOperator : public PhysicalOperator
 {
 public:
-  InsertPhysicalOperator(Table *table, std::vector<Value> &&values);
+  InsertPhysicalOperator(Table *table, std::vector<std::vector<Value> > &&values);
 
   virtual ~InsertPhysicalOperator() = default;
 
@@ -40,6 +47,11 @@ public:
   Tuple *current_tuple() override { return nullptr; }
 
 private:
+  RC mutli_insert(Trx *trx, std::vector<Record> &values);
+  RC rollback(Trx *trx, std::vector<Record> &values);
+
+private:
   Table             *table_ = nullptr;
-  std::vector<Value> values_;
+  std::vector<std::vector<Value> > values_;
+  size_t             insert_index_ = 0;
 };

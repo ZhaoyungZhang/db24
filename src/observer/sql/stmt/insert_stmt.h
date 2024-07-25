@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-25 14:06:35
+ * @FilePath: /miniob/src/observer/sql/stmt/insert_stmt.h
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -28,7 +35,7 @@ class InsertStmt : public Stmt
 {
 public:
   InsertStmt() = default;
-  InsertStmt(Table *table, const Value *values, int value_amount);
+  InsertStmt(Table *table, std::vector<std::vector<Value>> records);
 
   StmtType type() const override { return StmtType::INSERT; }
 
@@ -37,11 +44,16 @@ public:
 
 public:
   Table       *table() const { return table_; }
-  const Value *values() const { return values_; }
+  const std::vector<std::vector<Value>> records() const { return records_; }
   int          value_amount() const { return value_amount_; }
+  int          record_amount() const { return record_amount_; } 
+
+private:
+  static RC    check_one_record(Table *table, const std::vector<Value> &record);
 
 private:
   Table       *table_        = nullptr;
-  const Value *values_       = nullptr;
+  std::vector<std::vector<Value>> records_;
   int          value_amount_ = 0;
+  int          record_amount_  = 0;
 };
