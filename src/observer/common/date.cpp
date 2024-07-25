@@ -2,10 +2,10 @@
  * @Author: ZhaoyangZhang
  * @Date: 2024-07-24 10:11:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2024-07-24 18:18:58
- * @FilePath: /miniob/src/observer/sql/parser/date.cpp
+ * @LastEditTime: 2024-07-25 14:56:39
+ * @FilePath: /miniob/src/observer/common/date.cpp
  */
-#include "sql/parser/date.h"
+#include "common/date.h"
 #include "common/lang/comparator.h"
 #include <cstdio>
 #include <ctime>
@@ -29,7 +29,7 @@ Date::Date(const std::string &s) {
   if (tail != s.c_str() + s.size() || !valid_tm(tm)) {
     value = -1;
   } else {
-    value = mktime(&tm) / kSecondsInDay;
+    value = std::mktime(&tm) / kSecondsInDay;
   }
 }
 
@@ -37,7 +37,7 @@ std::string Date::to_string(const Date &date) {
   time_t t = date.value;
   t *= kSecondsInDay;
   struct tm tm;
-  localtime_r(&t, &tm);
+  gmtime_r(&t, &tm);
   char buf[32];  // 扩大缓冲区大小以确保足够大
   snprintf(buf, sizeof(buf), "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
   return std::string(buf);

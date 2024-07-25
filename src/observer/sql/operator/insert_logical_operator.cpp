@@ -2,7 +2,7 @@
  * @Author: ZhaoyangZhang
  * @Date: 2024-07-23 10:42:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2024-07-25 12:59:45
+ * @LastEditTime: 2024-07-25 12:57:33
  * @FilePath: /miniob/src/observer/sql/operator/insert_logical_operator.cpp
  */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
@@ -24,3 +24,4 @@ See the Mulan PSL v2 for more details. */
 
 InsertLogicalOperator::InsertLogicalOperator(Table *table, std::vector<std::vector<Value> > values) : table_(table), values_(values)
 {}
+
