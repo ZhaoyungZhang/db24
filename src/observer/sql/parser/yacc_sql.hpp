@@ -101,7 +101,8 @@ extern int yydebug;
     FLOAT = 307,
     ID = 308,
     SSS = 309,
-    UMINUS = 310
+    OR = 310,
+    UMINUS = 311
   };
 #endif
 
@@ -109,27 +110,28 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 117 "yacc_sql.y"
+#line 118 "yacc_sql.y"
 
-  ParsedSqlNode *                            sql_node;
-  ConditionSqlNode *                         condition;
-  Value *                                    value;
-  enum CompOp                                comp;
-  RelAttrSqlNode *                           rel_attr;
-  std::vector<AttrInfoSqlNode> *             attr_infos;
-  AttrInfoSqlNode *                          attr_info;
-  Expression *                               expression;
-  std::vector<std::unique_ptr<Expression>> * expression_list;
-  std::vector<Value> *                       value_list;
-  std::vector<std::vector<Value>>          * record_list;
-  std::vector<ConditionSqlNode> *            condition_list;
-  std::vector<RelAttrSqlNode> *              rel_attr_list;
-  std::vector<std::string> *                 relation_list;
-  char *                                     string;
-  int                                        number;
-  float                                      floats;
+  ParsedSqlNode *                               sql_node;
+  ComparisionExprSqlNode *                      condition;
+  ValueExprSqlNode *                            value_expr;
+  Value *                                       value;
+  enum CompOp                                   comp;
+  FieldExprSqlNode *                            rel_attr;
+  std::vector<AttrInfoSqlNode> *                attr_infos;
+  AttrInfoSqlNode *                             attr_info;
+  ExprSqlNode *                                 expression;
+  std::vector<ExprSqlNode *> *                  expression_list;
+  std::vector<ValueExprSqlNode> *               record;
+  std::vector<std::vector<ValueExprSqlNode>> *  record_list;
+  ConjunctionExprSqlNode *                      conjunction;
+  std::vector<RelAttrSqlNode> *                 rel_attr_list;
+  std::vector<std::string> *                    relation_list;
+  char *                                        string;
+  int                                           number;
+  float                                         floats;
 
-#line 133 "yacc_sql.hpp"
+#line 135 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

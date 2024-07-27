@@ -2,7 +2,7 @@
  * @Author: ZhaoyangZhang
  * @Date: 2024-07-23 10:42:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2024-07-25 14:12:33
+ * @LastEditTime: 2024-07-27 13:02:16
  * @FilePath: /miniob/src/observer/sql/stmt/filter_stmt.h
  */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
@@ -84,15 +84,15 @@ public:
   virtual ~FilterStmt();
 
 public:
-  const std::vector<FilterUnit *> &filter_units() const { return filter_units_; }
+  std::unique_ptr<Expression> &filter_expr() { return filter_expr_; }
 
 public:
   static RC create(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
-      const ConditionSqlNode *conditions, int condition_num, FilterStmt *&stmt);
+      const ConjunctionExprSqlNode *conditions, FilterStmt *&stmt);
 
-  static RC create_filter_unit(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
-      const ConditionSqlNode &condition, FilterUnit *&filter_unit);
+  // static RC create_filter_unit(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
+  //     const ConditionSqlNode &condition, FilterUnit *&filter_unit);
 
 private:
-  std::vector<FilterUnit *> filter_units_;  // 默认当前都是AND关系
+  std::unique_ptr<Expression> filter_expr_;
 };

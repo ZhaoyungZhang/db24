@@ -1,3 +1,10 @@
+/*
+ * @Author: ZhaoyangZhang
+ * @Date: 2024-07-23 10:42:58
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2024-07-27 10:51:15
+ * @FilePath: /miniob/src/observer/sql/optimizer/conjunction_simplification_rule.cpp
+ */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
 miniob is licensed under Mulan PSL v2.
 You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -49,7 +56,7 @@ RC ConjunctionSimplificationRule::rewrite(std::unique_ptr<Expression> &expr, boo
       continue;
     }
 
-    if (conjunction_expr->conjunction_type() == ConjunctionExpr::Type::AND) {
+    if (conjunction_expr->conjunction_type() == ConjunctionType::AND) {
       if (constant_value == true) {
         child_exprs.erase(iter);
       } else {

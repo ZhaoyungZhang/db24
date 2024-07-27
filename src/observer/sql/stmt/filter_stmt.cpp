@@ -19,34 +19,22 @@ See the Mulan PSL v2 for more details. */
 #include "storage/db/db.h"
 #include "storage/table/table.h"
 
-FilterStmt::~FilterStmt()
-{
-  for (FilterUnit *unit : filter_units_) {
-    delete unit;
-  }
-  filter_units_.clear();
-}
+FilterStmt::~FilterStmt() {}
 
 RC FilterStmt::create(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
-    const ConditionSqlNode *conditions, int condition_num, FilterStmt *&stmt)
+    const ConjunctionExprSqlNode *conditions, FilterStmt *&stmt) 
 {
+  Expression *expr;
   RC rc = RC::SUCCESS;
   stmt  = nullptr;
 
-  FilterStmt *tmp_stmt = new FilterStmt();
-  for (int i = 0; i < condition_num; i++) {
-    FilterUnit *filter_unit = nullptr;
-
-    rc = create_filter_unit(db, default_table, tables, conditions[i], filter_unit);
-    if (rc != RC::SUCCESS) {
-      delete tmp_stmt;
-      LOG_WARN("failed to create filter unit. condition index=%d", i);
-      return rc;
-    }
-    tmp_stmt->filter_units_.push_back(filter_unit);
+  rc = ConjunctionExpr::create(db, default_table, tables, false, conditions, expr);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to create ConjunctionExpr");
+    return rc;
   }
-
-  stmt = tmp_stmt;
+  stmt = new FilterStmt();
+  stmt->filter_expr_.reset(expr);
   return rc;
 }
 
@@ -78,86 +66,86 @@ RC get_table_and_field(Db *db, Table *default_table, std::unordered_map<std::str
   return RC::SUCCESS;
 }
 
-RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
-    const ConditionSqlNode &condition, FilterUnit *&filter_unit)
-{
-  RC rc = RC::SUCCESS;
+// RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
+//     const ConditionSqlNode &condition, FilterUnit *&filter_unit)
+// {
+//   RC rc = RC::SUCCESS;
 
-  CompOp comp = condition.comp;
-  if (comp < EQUAL_TO || comp >= NO_OP) {
-    LOG_WARN("invalid compare operator : %d", comp);
-    return RC::INVALID_ARGUMENT;
-  }
+//   CompOp comp = condition.comp;
+//   if (comp < EQUAL_TO || comp >= NO_OP) {
+//     LOG_WARN("invalid compare operator : %d", comp);
+//     return RC::INVALID_ARGUMENT;
+//   }
 
-  filter_unit = new FilterUnit;
+//   filter_unit = new FilterUnit;
 
-  AttrType left_type;
+//   AttrType left_type;
 
-  if (condition.left_is_attr) {
-    Table           *table = nullptr;
-    const FieldMeta *field = nullptr;
-    rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("cannot find attr");
-      return rc;
-    }
-    FilterObj filter_obj;
-    filter_obj.init_attr(Field(table, field));
-    filter_unit->set_left(filter_obj);
-    left_type = field->type();
-  } else {
-    FilterObj filter_obj;
-    filter_obj.init_value(condition.left_value);
-    filter_unit->set_left(filter_obj);
-    left_type = condition.left_value.attr_type();
-  }
+//   if (condition.left_is_attr) {
+//     Table           *table = nullptr;
+//     const FieldMeta *field = nullptr;
+//     rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
+//     if (rc != RC::SUCCESS) {
+//       LOG_WARN("cannot find attr");
+//       return rc;
+//     }
+//     FilterObj filter_obj;
+//     filter_obj.init_attr(Field(table, field));
+//     filter_unit->set_left(filter_obj);
+//     left_type = field->type();
+//   } else {
+//     FilterObj filter_obj;
+//     filter_obj.init_value(condition.left_value);
+//     filter_unit->set_left(filter_obj);
+//     left_type = condition.left_value.attr_type();
+//   }
 
-  AttrType right_type;
+//   AttrType right_type;
 
-  if (condition.right_is_attr) {
-    Table           *table = nullptr;
-    const FieldMeta *field = nullptr;
-    rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("cannot find attr");
-      return rc;
-    }
-    FilterObj filter_obj;
-    filter_obj.init_attr(Field(table, field));
-    filter_unit->set_right(filter_obj);
-    right_type = field->type();
-  } else {
-    FilterObj filter_obj;
-    filter_obj.init_value(condition.right_value);
-    filter_unit->set_right(filter_obj);
-    right_type = condition.right_value.attr_type();
-  }
+//   if (condition.right_is_attr) {
+//     Table           *table = nullptr;
+//     const FieldMeta *field = nullptr;
+//     rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
+//     if (rc != RC::SUCCESS) {
+//       LOG_WARN("cannot find attr");
+//       return rc;
+//     }
+//     FilterObj filter_obj;
+//     filter_obj.init_attr(Field(table, field));
+//     filter_unit->set_right(filter_obj);
+//     right_type = field->type();
+//   } else {
+//     FilterObj filter_obj;
+//     filter_obj.init_value(condition.right_value);
+//     filter_unit->set_right(filter_obj);
+//     right_type = condition.right_value.attr_type();
+//   }
 
-  if (left_type != right_type) { // 需要进行转换
-    if (condition.left_is_attr && !condition.right_is_attr) {
-      // 右侧是值 左侧是属性 例如: select * from student where id = 1;
-      auto right_value = condition.right_value;
-      if (!Value::convert(left_type,right_value)){
-        LOG_TRACE("Convert failed, left type is %d, right value type is %d",left_type,right_value.attr_type());
-        return RC::SQL_SYNTAX;
-      }
-      FilterObj fobj;
-      fobj.init_value(right_value);
-      filter_unit->set_right(fobj);
-    } else if (!condition.left_is_attr && condition.right_is_attr) {
-      // 右侧是属性 左侧是值
-      auto left_value = condition.left_value;
-      if (!Value::convert(right_type,left_value)){
-        LOG_TRACE("Convert failed, right type is %d, left value type is %d",right_type,left_value.attr_type());
-        return RC::SQL_SYNTAX;
-      }
-      FilterObj fobj;
-      fobj.init_value(left_value);
-      filter_unit->set_left(fobj);
-    }
-  }
+//   if (left_type != right_type) { // 需要进行转换
+//     if (condition.left_is_attr && !condition.right_is_attr) {
+//       // 右侧是值 左侧是属性 例如: select * from student where id = 1;
+//       auto right_value = condition.right_value;
+//       if (!Value::convert(left_type,right_value)){
+//         LOG_TRACE("Convert failed, left type is %d, right value type is %d",left_type,right_value.attr_type());
+//         return RC::SQL_SYNTAX;
+//       }
+//       FilterObj fobj;
+//       fobj.init_value(right_value);
+//       filter_unit->set_right(fobj);
+//     } else if (!condition.left_is_attr && condition.right_is_attr) {
+//       // 右侧是属性 左侧是值
+//       auto left_value = condition.left_value;
+//       if (!Value::convert(right_type,left_value)){
+//         LOG_TRACE("Convert failed, right type is %d, left value type is %d",right_type,left_value.attr_type());
+//         return RC::SQL_SYNTAX;
+//       }
+//       FilterObj fobj;
+//       fobj.init_value(left_value);
+//       filter_unit->set_left(fobj);
+//     }
+//   }
   
-  filter_unit->set_comp(comp);
-  // 检查两个类型是否能够比较
-  return rc;
-}
+//   filter_unit->set_comp(comp);
+//   // 检查两个类型是否能够比较
+//   return rc;
+// }

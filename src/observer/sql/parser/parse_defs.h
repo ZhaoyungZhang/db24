@@ -14,19 +14,16 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include "sql/parser/value.h"
+#include "sql/expr/expression.h"
 #include <memory>
 #include <stddef.h>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "sql/parser/value.h"
-
+enum class ExprType;
 class Expression;
-
-/**
- * @defgroup SQLParser SQL Parser
- */
 
 /**
  * @brief 描述一个属性
@@ -39,6 +36,28 @@ struct RelAttrSqlNode
 {
   std::string relation_name;   ///< relation name (may be NULL) 表名
   std::string attribute_name;  ///< attribute name              属性名
+};
+
+/**
+ * @brief 描述一个逻辑运算符
+ * @ingroup SQLParser
+ */
+enum class ConjunctionType {
+  AND,
+  OR,
+  SINGLE,
+};
+
+/**
+ * @brief 描述一个算术运算符
+ * @ingroup SQLParser
+ */
+enum class ArithmeticType {
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  NEGATIVE,
 };
 
 /**
@@ -55,6 +74,51 @@ enum CompOp
   GREAT_THAN,   ///< ">"
   NO_OP
 };
+
+struct ExprSqlNode;
+struct StarExprSqlNode;
+struct FieldExprSqlNode;
+struct ValueExprSqlNode;
+struct ComparisonExprSqlNode;
+struct ConjunctionExprSqlNode;
+struct ArithmeticExprSqlNode;
+
+
+class ExprSqlNode {
+public:
+  ExprSqlNode(StarExprSqlNode *star) : type_(ExprType::STAR) { expr_.star = star; }
+  ExprSqlNode(FieldExprSqlNode *field) : type_(ExprType::FIELD) { expr_.field = field; }
+  ExprSqlNode(ValueExprSqlNode *value) : type_(ExprType::VALUE) { expr_.value = value; }
+  ExprSqlNode(ComparisonExprSqlNode *comparison) : type_(ExprType::COMPARISON) { expr_.comparison = comparison; }
+  ExprSqlNode(ConjunctionExprSqlNode *conjunction) : type_(ExprType::CONJUNCTION) { expr_.conjunction = conjunction; }
+  ExprSqlNode(ArithmeticExprSqlNode *arithmetic) : type_(ExprType::ARITHMETIC) { expr_.arithmetic = arithmetic; }
+  ~ExprSqlNode();
+
+  void set_name(std::string name) { name_ = name; }
+  FieldExprSqlNode *get_field() const { return expr_.field; }
+  ValueExprSqlNode *get_value() const { return expr_.value; }
+  ComparisonExprSqlNode *get_comparison() const { return expr_.comparison; }
+  ConjunctionExprSqlNode *get_conjunction() const { return expr_.conjunction; }
+  ArithmeticExprSqlNode *get_arithmetic() const { return expr_.arithmetic; }
+
+  ExprType type() const { return type_; }
+  const std::string &name() const { return name_; }
+
+
+private:
+  std::string name_;
+  union
+  {
+    StarExprSqlNode *star;
+    FieldExprSqlNode *field;
+    ValueExprSqlNode *value;
+    ComparisonExprSqlNode *comparison;
+    ConjunctionExprSqlNode *conjunction;
+    ArithmeticExprSqlNode *arithmetic;
+  } expr_;
+  ExprType type_;
+};
+
 
 /**
  * @brief 表示一个条件比较
@@ -78,6 +142,65 @@ struct ConditionSqlNode
 };
 
 /**
+ * @brief select *
+ */
+struct StarExprSqlNode {};
+
+/**
+ * @brief 表示一个属性
+ * @details 属性，或者说字段(column, field)
+ */
+struct FieldExprSqlNode {
+  std::string table_name;
+  std::string field_name;
+};
+
+
+/**
+ * @brief 表示一个值
+ */
+struct ValueExprSqlNode { 
+  Value value;
+};
+
+/**
+ * @brief 表示一个比较表达式
+ */
+struct ComparisonExprSqlNode {
+  ExprSqlNode *left;
+  ExprSqlNode *right;
+  CompOp comp_op;
+
+  template <typename T1, typename T2>
+  ComparisonExprSqlNode(T1 *left, T2 *right, CompOp op)
+      : left(get_expr_pointer(left)), right(get_expr_pointer(right)), comp_op(op) {}
+  ~ComparisonExprSqlNode();
+};
+
+/**
+ * @brief 表示一个逻辑表达式
+ */
+struct ConjunctionExprSqlNode {
+  ExprSqlNode *left;
+  ExprSqlNode *right;
+  ConjunctionType type;
+  template <typename T1, typename T2>
+  ConjunctionExprSqlNode(T1 *left, T2 *right, ConjunctionType type)
+      : left(get_expr_pointer(left)), right(get_expr_pointer(right)), type(type) {}
+  ~ConjunctionExprSqlNode();
+};
+
+struct ArithmeticExprSqlNode {
+  ExprSqlNode *left;
+  ExprSqlNode *right;
+  ArithmeticType type;
+  template <typename T1, typename T2>
+  ArithmeticExprSqlNode(T1 *left, T2 *right, ArithmeticType type)
+      : left(get_expr_pointer(left)), right(get_expr_pointer(right)), type(type) {}
+  ~ArithmeticExprSqlNode();
+};
+
+/**
  * @brief 描述一个select语句
  * @ingroup SQLParser
  * @details 一个正常的select语句描述起来比这个要复杂很多，这里做了简化。
@@ -86,14 +209,24 @@ struct ConditionSqlNode
  * 比如 from 中可以是多个表，也可以是另一个查询语句，这里仅仅支持表，也就是 relations。
  * where 条件 conditions，这里表示使用AND串联起来多个条件。正常的SQL语句会有OR，NOT等，
  * 甚至可以包含复杂的表达式。
+ * @todo expressions 重构或者进行向量化操作 看 vldbss 的题
  */
-
 struct SelectSqlNode
 {
   std::vector<std::unique_ptr<Expression>> expressions;  ///< 查询的表达式
+
+  std::vector<ExprSqlNode *>               attributes;   ///< 查询(子句/表达式)的属性
   std::vector<std::string>                 relations;    ///< 查询的表
-  std::vector<ConditionSqlNode>            conditions;   ///< 查询条件，使用AND串联起来多个条件
+  ConjunctionExprSqlNode                  *conditions;   ///< 查询条件，使用AND串联起来多个条件
+
   std::vector<std::unique_ptr<Expression>> group_by;     ///< group by clause
+
+  ~SelectSqlNode() {
+    for (auto *x : attributes){
+      delete x;
+    }
+    delete conditions;
+  }
 };
 
 /**
@@ -102,7 +235,10 @@ struct SelectSqlNode
  */
 struct CalcSqlNode
 {
-  std::vector<std::unique_ptr<Expression>> expressions;  ///< calc clause
+  // std::vector<std::unique_ptr<Expression>> expressions;  ///< calc clause
+  std::vector<ExprSqlNode *> expressions;                ///< calc clause
+
+  ~CalcSqlNode();
 };
 
 /**
@@ -113,7 +249,7 @@ struct CalcSqlNode
 struct InsertSqlNode
 {
   std::string        relation_name;           ///< Relation to insert into
-  std::vector<std::vector<Value>> values;    ///< 要插入的值 INSERT INTO insert_table VALUES (2,'N2',1,1),(3,'N3',2,1)
+  std::vector<std::vector<Value> > values;    ///< 要插入的值 INSERT INTO insert_table VALUES (2,'N2',1,1),(3,'N3',2,1)
 };
 
 /**
@@ -123,7 +259,8 @@ struct InsertSqlNode
 struct DeleteSqlNode
 {
   std::string                   relation_name;  ///< Relation to delete from
-  std::vector<ConditionSqlNode> conditions;
+  // std::vector<ConditionSqlNode> conditions;
+  ConjunctionExprSqlNode         *conditions;   ///< 删除的条件
 };
 
 /**
@@ -134,8 +271,10 @@ struct UpdateSqlNode
 {
   std::string                   relation_name;   ///< Relation to update
   std::string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Value                         value;           ///< 更新的值，仅支持一个字段
-  std::vector<ConditionSqlNode> conditions;      ///< 更新的条件
+  // Value                         value;           ///< 更新的值，仅支持一个字段
+  // std::vector<ConditionSqlNode> conditions;      ///< 更新的条件
+  ValueExprSqlNode               value;          ///< value
+  ConjunctionExprSqlNode         *conditions;    ///< update condition
 };
 
 /**

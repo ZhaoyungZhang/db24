@@ -2,7 +2,7 @@
  * @Author: ZhaoyangZhang
  * @Date: 2024-07-23 10:42:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2024-07-25 14:12:24
+ * @LastEditTime: 2024-07-27 12:09:05
  * @FilePath: /miniob/src/observer/sql/parser/value.h
  */
 /* Copyright (c) 2021 OceanBase and/or its affiliates. All rights reserved.
@@ -84,6 +84,8 @@ public:
 
   static bool convert(AttrType new_type, Value &value); // convert Value type to new_type
 
+  static bool check_value(const Value &value);
+
   const char *data() const;
   int         length() const { return length_; }
 
@@ -115,3 +117,5 @@ private:
   } num_value_;
   std::string str_value_;
 };
+
+AttrType AttrTypeCompare(AttrType a, AttrType b);

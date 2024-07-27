@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include <sstream>
+#include "value.h"
 
 const char *ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans", "dates"};
 
@@ -34,6 +35,12 @@ AttrType attr_type_from_string(const char *s){
     }
   }
   return AttrType::UNDEFINED;
+}
+
+AttrType AttrTypeCompare(AttrType a, AttrType b) { return AttrType(); }
+
+bool Value::check_value(const Value &v) {
+  return v.attr_type() != AttrType::UNDEFINED && (v.attr_type() != AttrType::CHARS || v.get_date() != INVALID_DATE);
 }
 
 Value::Value(int val) { set_int(val); }
